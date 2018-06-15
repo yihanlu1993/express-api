@@ -1,0 +1,5 @@
+[
+    { "id": 1, "name": "James Bond", "email": "james@bond.com" },
+    { "id": 2, "name": "David Jones", "email": "david@jones.com"  },
+    { "id":3, "name": "David Beckham", "email": "david@beckham.com" }
+  ]

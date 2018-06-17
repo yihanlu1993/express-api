@@ -21,7 +21,8 @@ export default ({ config, db }) => resource({
             err = error
         }
 		let customer = data.find( a => a.id == id ),
-			err = customer ? null : NOT_FOUND_ERROR_MSG;
+            err = customer ? null : NOT_FOUND_ERROR_MSG;
+        if(customer) customer.id = id;
 		callback(err, customer);
 	},
 
@@ -43,11 +44,23 @@ export default ({ config, db }) => resource({
 	/** PUT /:id - Update a given entity */
 	update({ customer, body }, res) {
         const { data, error } = getCustomerData()
+
         if(body.hasOwnProperty('email') && !body.email) {
             return res.boom.badRequest( 'Email can not be empty' );
-        } else if(body.hasOwnProperty('name') && !body.name) {
+        } else if (body.hasOwnProperty('email')) {
+            if(duplicateEmail(data, customer.id, body.email)) {
+                return res.boom.badRequest( 'Email already being used.' )
+            }
+    
+            if(!validateEmail(body.email)) {
+                return res.boom.badRequest( 'Email invalid.' )
+            }
+        }
+        
+        if(body.hasOwnProperty('name') && !body.name) {
             return res.boom.badRequest( 'Name can not be empty' );
         }
+
 		for (let key in body) {
 			if (key!=='id') {
 				customer[key] = body[key];
@@ -85,4 +98,16 @@ const getCustomerData = () => {
         customers.error = err;
         return customers;
     }
+}
+
+const validateEmail = (email) => {
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
+
+const duplicateEmail = (customers, id, email) => {
+    for (let a in customers) {
+        if(customers[a].id != id && customers[a].email === email) return true;
+    };
+    return false;
 }
